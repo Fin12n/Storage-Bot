@@ -56,6 +56,7 @@ if (fs.existsSync(eventsPath)) {
 require('./src/webserver');
 
 // Replace with your actual bot token
-const BOT_TOKEN = process.env.BOT_TOKEN || 'MTM0NDg1Mzc0NzI1OTU0MzY4Mg.GM7GUe.xZoPpNmqS3uOJCzJxlOOuKA_ru1CJP92IHlBk8';
+const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_TOKEN_BOT_DISCORD';
+
 
 client.login(BOT_TOKEN).catch(console.error);
