@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin Storage Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f0f23;
+            --bg-darker: #050511;
+            --primary: #5865f2;
+            --primary-dark: #4752c4;
+            --secondary: #ffa500;
+            --success: #00ff88;
+            --danger: #ff4757;
+            --warning: #ffc048;
+            --text: #ffffff;
+            --text-muted: #72767d;
+            --card-bg: #1e1e2e;
+            --border: #2f3349;
+            --glass: rgba(255, 255, 255, 0.05);
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Animated background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 50%, #5865f2 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, #ffa500 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, #00ff88 0%, transparent 50%);
+            filter: blur(60px);
+            opacity: 0.1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(1deg); }
+            66% { transform: translateY(10px) rotate(-1deg); }
+        }
+
+        /* Navigation */
+        .navbar {
+            background: rgba(30, 30, 46, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo i {
+            color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--card-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .user-info:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.3);
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Login Screen */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient);
+        }
+
+        .login-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .discord-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .discord-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(88, 101, 242, 0.4);
+        }
+
+        .discord-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .discord-btn:hover::before {
+            left: 100%;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-icon {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Plugins Grid */
+        .plugins-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            border-color: var(--primary);
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .plugins-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .plugin-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .plugin-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .plugin-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .plugin-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .plugin-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .plugin-info p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .plugin-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .plugin-stat {
+            text-align: center;
+        }
+
+        .plugin-stat-value {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .plugin-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .plugin-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border-radius: 25px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-content {
+                padding: 0 1rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .plugins-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+            
+            .btn-group {
+                justify-content: center;
+            }
+            
+            .plugins-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading animations */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            z-index: 1000;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 400px;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+        .toast.warning { border-color: var(--warning); }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar" style="display: none;">
+        <div class="navbar-content">
+            <div class="logo">
+                <i class="fas fa-box-open"></i>
+                Plugin Storage
+            </div>
+            <div class="user-info" id="userInfo">
+                <img id="userAvatar" class="avatar" src="" alt="Avatar">
+                <span id="userName"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Screen -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-card">
+            <h1 class="login-title">
+                <i class="fas fa-box-open"></i>
+                Plugin Storage
+            </h1>
+            <p class="login-subtitle">Đăng nhập để quản lý kho plugins của bạn</p>
+            <a href="/auth/discord" class="discord-btn">
+                <i class="fab fa-discord"></i>
+                Đăng nhập với Discord
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="container" id="dashboard" style="display: none;">
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats will be loaded here -->
+        </div>
+
+        <!-- Plugins -->
+        <div class="plugins-header">
+            <h2 class="section-title">
+                <i class="fas fa-cubes"></i>
+                Plugins
+            </h2>
+            <div class="btn-group">
+                <button class="btn" onclick="refreshPlugins()">
+                    <i class="fas fa-sync-alt"></i>
+                    Reload
+                </button>
+                <button class="btn btn-primary" onclick="showUploadModal()">
+                    <i class="fas fa-upload"></i>
+                    Upload
+                </button>
+            </div>
+        </div>
+
+        <div class="plugins-grid" id="pluginsGrid">
+            <!-- Plugins will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let plugins = [];
+
+        // Check authentication on load
+        window.addEventListener('load', async () => {
+            await checkAuth();
+        });
+
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/user');
+                if (response.ok) {
+                    currentUser = await response.json();
+                    showDashboard();
+                } else {
+                    showLogin();
+                }
+            } catch (error) {
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('navbar').style.display = 'none';
+        }
+
+        function showDashboard() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('navbar').style.display = 'block';
+            
+            // Update user info
+            document.getElementById('userName').textContent = currentUser.username;
+            document.getElementById('userAvatar').src = currentUser.avatar;
+            
+            // Load data
+            loadStats();
+            loadPlugins();
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                const statsHtml = `
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Total Plugins</span>
+                            <i class="fas fa-cubes stat-icon"></i>
+                        </div>
+                        <div class="stat-value">${stats.totalPlugins}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Total Files</span>
+                            <i class="fas fa-file-archive stat-icon"></i>
+                        </div>
+                        <div class="stat-value">${stats.totalFiles}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Storage Used</span>
+                            <i class="fas fa-hdd stat-icon"></i>
+                        </div>
+                        <div class="stat-value">${(stats.totalSize / 1024 / 1024).toFixed(1)}MB</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Downloads</span>
+                            <i class="fas fa-download stat-icon"></i>
+                        </div>
+                        <div class="stat-value">${stats.totalDownloads}</div>
+                    </div>
+                `;
+                
+                document.getElementById('statsGrid').innerHTML = statsHtml;
+            } catch (error) {
+                showToast('Lỗi khi tải thống kê', 'error');
+            }
+        }
+
+        async function loadPlugins() {
+            try {
+                const response = await fetch('/api/plugins');
+                plugins = await response.json();
+                
+                const pluginsHtml = plugins.map((plugin, index) => `
+                    <div class="plugin-card" style="animation-delay: ${index * 0.1}s" onclick="viewPlugin('${plugin.folder_name}')">
+                        <div class="plugin-header">
+                            <div class="plugin-icon">${plugin.folder_name.charAt(0).toUpperCase()}</div>
+                            <div class="plugin-info">
+                                <h3>${plugin.folder_name}</h3>
+                                <p>${plugin.file_count} files</p>
+                            </div>
+                        </div>
+                        <div class="plugin-stats">
+                            <div class="plugin-stat">
+                                <div class="plugin-stat-value">${(plugin.total_size / 1024).toFixed(1)}</div>
+                                <div class="plugin-stat-label">KB</div>
+                            </div>
+                            <div class="plugin-stat">
+                                <div class="plugin-stat-value">${plugin.file_count}</div>
+                                <div class="plugin-stat-label">Files</div>
+                            </div>
+                            <div class="plugin-stat">
+                                <div class="plugin-stat-value">${new Date(plugin.last_updated).toLocaleDateString()}</div>
+                                <div class="plugin-stat-label">Updated</div>
+                            </div>
+                        </div>
+                        <div class="plugin-actions">
+                            <button class="btn btn-sm" onclick="event.stopPropagation(); createDownloadLink('${plugin.folder_name}')">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
+                            <button class="btn btn-sm" onclick="event.stopPropagation(); viewPlugin('${plugin.folder_name}')">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('pluginsGrid').innerHTML = pluginsHtml;
+            } catch (error) {
+                showToast('Lỗi khi tải plugins', 'error');
+            }
+        }
+
+        async function refreshPlugins() {
+            const btn = event.target.closest('.btn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<div class="loading"></div> Reloading...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/reload', { method: 'POST' });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showToast(`Reload thành công! Tìm thấy ${result.newPlugins} plugins mới`, 'success');
+                    await loadStats();
+                    await loadPlugins();
+                } else {
+                    showToast(result.error || 'Lỗi khi reload', 'error');
+                }
+            } catch (error) {
+                showToast('Lỗi khi reload plugins', 'error');
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        function showUploadModal() {
+            // Create upload modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.8); z-index: 2000;
+                display: flex; align-items: center; justify-content: center;
+                animation: fadeIn 0.3s ease-out;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: var(--card-bg); border: 1px solid var(--border); 
+                            border-radius: 20px; padding: 2rem; max-width: 500px; width: 90%;
+                            animation: fadeInUp 0.3s ease-out;">
+                    <h3 style="margin-bottom: 1rem; color: var(--text);">Upload Plugin</h3>
+                    <div style="border: 2px dashed var(--border); border-radius: 12px; 
+                                padding: 2rem; text-align: center; margin-bottom: 1rem;
+                                transition: all 0.3s ease;" 
+                         ondragover="event.preventDefault(); this.style.borderColor='var(--primary)'" 
+                         ondragleave="this.style.borderColor='var(--border)'"
+                         ondrop="handleFileDrop(event)">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                        <p>Kéo thả file .jar vào đây hoặc</p>
+                        <input type="file" accept=".jar" style="display: none;" id="fileInput" onchange="handleFileSelect(event)">
+                        <button onclick="document.getElementById('fileInput').click()" style="margin-top: 1rem; background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 25px; cursor: pointer;">
+                            Chọn file
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" 
+                                style="background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 25px; cursor: pointer;">
+                            Hủy
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function handleFileDrop(event) {
+            event.preventDefault();
+            event.target.style.borderColor = 'var(--border)';
+            const file = event.dataTransfer.files[0];
+            if (file) uploadFile(file);
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) uploadFile(file);
+        }
+
+        async function uploadFile(file) {
+            if (!file.name.endsWith('.jar')) {
+                showToast('Chỉ chấp nhận file .jar', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showToast('Upload thành công!', 'success');
+                    document.querySelector('div[style*="position: fixed"]').remove();
+                    await loadStats();
+                    await loadPlugins();
+                } else {
+                    showToast(result.error || 'Lỗi upload', 'error');
+                }
+            } catch (error) {
+                showToast('Lỗi khi upload file', 'error');
+            }
+        }
+
+        function viewPlugin(folderName) {
+            window.location.href = `/plugin/${folderName}`;
+        }
+
+        async function createDownloadLink(folderName) {
+            // Implementation for creating download links
+            showToast('Chức năng đang phát triển', 'warning');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
