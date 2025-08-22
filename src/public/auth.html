@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin Storage - Đăng nhập</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+        }
+
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            display: block;
+            pointer-events: none;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float-particles 15s infinite linear;
+        }
+
+        @keyframes float-particles {
+            0% {
+                opacity: 0;
+                transform: translateY(100vh) rotate(0deg);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100vh) rotate(360deg);
+            }
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            animation: slideInUp 1s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .logo {
+            font-size: 4rem;
+            color: white;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .login-title {
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .discord-btn {
+            background: #5865f2;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(88, 101, 242, 0.3);
+        }
+
+        .discord-btn:hover {
+            background: #4752c4;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(88, 101, 242, 0.4);
+        }
+
+        .discord-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .discord-btn:hover::before {
+            left: 100%;
+        }
+
+        .features {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: left;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+        }
+
+        .feature-icon {
+            color: #ffd700;
+            width: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+            
+            .login-title {
+                font-size: 2rem;
+            }
+            
+            .discord-btn {
+                padding: 0.875rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="login-container">
+        <div class="logo">
+            <i class="fas fa-cube"></i>
+        </div>
+        
+        <h1 class="login-title">Plugin Storage</h1>
+        <p class="login-subtitle">
+            Hệ thống quản lý kho plugins Minecraft<br>
+            Đăng nhập để truy cập dashboard
+        </p>
+        
+        <a href="/auth/discord" class="discord-btn">
+            <i class="fab fa-discord"></i>
+            Đăng nhập với Discord
+        </a>
+        
+        <div class="features">
+            <div class="feature-item">
+                <i class="fas fa-upload feature-icon"></i>
+                Upload & quản lý plugins
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-download feature-icon"></i>
+                Tạo link tải bảo mật
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-users feature-icon"></i>
+                Quản lý quyền người dùng
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-chart-bar feature-icon"></i>
+                Thống kê chi tiết
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Check if already authenticated
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/user');
+                if (response.ok) {
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                // User not authenticated, stay on login page
+            }
+        }
+
+        window.addEventListener('load', () => {
+            createParticles();
+            checkAuth();
+        });
+    </script>
+</body>
+</html>

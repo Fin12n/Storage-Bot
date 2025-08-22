@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin Details - Plugin Storage</title>
+	<link rel="stylesheet" href="/static/css/style-db.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                <i class="fas fa-cube"></i>
+                Plugin Storage
+            </div>
+            
+            <div class="nav-actions">
+                <a href="/" class="btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Plugin Header -->
+        <div class="plugin-detail-header">
+            <div class="plugin-detail-icon" id="pluginIcon">
+                <!-- Plugin icon will be generated here -->
+            </div>
+            <div class="plugin-detail-info">
+                <h1 id="pluginName" class="plugin-detail-title">Loading...</h1>
+                <p id="pluginDescription" class="plugin-detail-description">Loading plugin details...</p>
+                <div class="plugin-detail-badges" id="pluginBadges">
+                    <!-- Badges will be added here -->
+                </div>
+            </div>
+            <div class="plugin-detail-actions">
+                <button class="btn btn-primary" onclick="showBulkDownloadModal()">
+                    <i class="fas fa-download"></i>
+                    Bulk Download
+                </button>
+                <button class="btn" onclick="refreshPluginData()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Plugin Stats -->
+        <div class="plugin-stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-file-archive"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalFiles">0</div>
+                    <div class="stat-label">Total Files</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-hdd"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalSize">0 MB</div>
+                    <div class="stat-label">Total Size</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-download"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalDownloads">0</div>
+                    <div class="stat-label">Total Downloads</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="lastUpdated">-</div>
+                    <div class="stat-label">Last Updated</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files Section -->
+        <div class="card">
+            <div class="card-header">
+                <div class="files-header">
+                    <h3><i class="fas fa-folder-open"></i> Plugin Files</h3>
+                    <div class="files-controls">
+                        <input type="text" placeholder="Search files..." class="search-input" id="fileSearch" onkeyup="filterFiles()">
+                        <select class="form-control" id="sortSelect" onchange="sortFiles()" style="width: auto; min-width: 150px;">
+                            <option value="name">Sort by Name</option>
+                            <option value="size">Sort by Size</option>
+                            <option value="date">Sort by Date</option>
+                            <option value="downloads">Sort by Downloads</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="files-grid" id="filesGrid">
+                    <!-- Files will be loaded here -->
+                    <div class="loading-state">
+                        <div class="loading"></div>
+                        <p>Loading files...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Download Modal -->
+    <div id="bulkDownloadModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Create Bulk Download Link</h3>
+                <button class="modal-close" onclick="closeBulkDownloadModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Select Files</label>
+                    <div class="files-selector" id="filesSelector">
+                        <!-- File checkboxes will be generated here -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Max Downloads</label>
+                    <input type="number" class="form-control" id="maxDownloads" value="10" min="1" max="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Expires In (hours)</label>
+                    <input type="number" class="form-control" id="expiresHours" value="24" min="1" max="168">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Allowed IPs (optional)</label>
+                    <textarea class="form-control" id="allowedIps" placeholder="192.168.1.1,10.0.0.1" rows="3"></textarea>
+                    <small class="text-muted">Comma separated list of IP addresses. Leave empty to allow all IPs.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeBulkDownloadModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createBulkDownload()">Create Download Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Detail Modal -->
+    <div id="fileDetailModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="fileDetailTitle">File Details</h3>
+                <button class="modal-close" onclick="closeFileDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="fileDetailBody">
+                <!-- File details will be loaded here -->
+            </div>
+            <div class="modal-footer" id="fileDetailFooter">
+                <!-- File actions will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        let currentPlugin = null;
+        let pluginFiles = [];
+        let filteredFiles = [];
+        let currentUser = null;
+
+        // Get plugin folder name from URL
+        const pluginFolder = window.location.pathname.split('/').pop();
+
+        // Initialize page
+        window.addEventListener('load', async () => {
+            await checkAuth();
+            await loadPluginData();
+        });
+
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/user');
+                if (response.ok) {
+                    currentUser = await response.json();
+                } else {
+                    window.location.href = '/auth';
+                }
+            } catch (error) {
+                window.location.href = '/auth';
+            }
+        }
+
+        async function loadPluginData() {
+            try {
+                const response = await fetch(`/api/plugins/${pluginFolder}`);
+                if (!response.ok) {
+                    throw new Error('Plugin not found');
+                }
+                
+                pluginFiles = await response.json();
+                filteredFiles = [...pluginFiles];
+                
+                if (pluginFiles.length === 0) {
+                    showEmptyState();
+                    return;
+                }
+
+                updatePluginHeader();
+                updatePluginStats();
+                displayFiles();
+                
+            } catch (error) {
+                console.error('Error loading plugin:', error);
+                showToast('Error loading plugin data', 'error');
+                setTimeout(() => window.location.href = '/', 3000);
+            }
+        }
+
+        function updatePluginHeader() {
+            const pluginName = pluginFiles[0]?.name || pluginFolder;
+            const icon = pluginName.charAt(0).toUpperCase();
+            
+            document.getElementById('pluginName').textContent = pluginName;
+            document.getElementById('pluginIcon').innerHTML = icon;
+            document.getElementById('pluginDescription').textContent = `${pluginFiles.length} files in this plugin folder`;
+            
+            // Update page title
+            document.title = `${pluginName} - Plugin Storage`;
+            
+            // Add badges
+            const badges = document.getElementById('pluginBadges');
+            badges.innerHTML = `
+                <span class="badge badge-primary">${pluginFiles.length} Files</span>
+                <span class="badge badge-success">Active</span>
+            `;
+        }
+
+        function updatePluginStats() {
+            const totalSize = pluginFiles.reduce((sum, file) => sum + file.file_size, 0);
+            const totalDownloads = pluginFiles.reduce((sum, file) => sum + (file.download_count || 0), 0);
+            const lastUpdated = Math.max(...pluginFiles.map(file => new Date(file.upload_date).getTime()));
+            
+            document.getElementById('totalFiles').textContent = pluginFiles.length;
+            document.getElementById('totalSize').textContent = formatSize(totalSize);
+            document.getElementById('totalDownloads').textContent = totalDownloads;
+            document.getElementById('lastUpdated').textContent = formatDate(new Date(lastUpdated));
+        }
+
+        function displayFiles() {
+            const filesGrid = document.getElementById('filesGrid');
+            
+            if (filteredFiles.length === 0) {
+                filesGrid.innerHTML = '<div class="empty-state"><p>No files match your search.</p></div>';
+                return;
+            }
+            
+            const filesHtml = filteredFiles.map((file, index) => `
+                <div class="file-card" style="animation-delay: ${index * 0.1}s" onclick="showFileDetail(${file.id})">
+                    <div class="file-header">
+                        <div class="file-icon">
+                            <i class="fas fa-file-archive"></i>
+                        </div>
+                        <div class="file-info">
+                            <h4 class="file-name">${file.full_name}</h4>
+                            <p class="file-meta">
+                                Version ${file.version} • ${formatSize(file.file_size)}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="file-stats">
+                        <div class="file-stat">
+                            <span class="file-stat-value">${file.download_count || 0}</span>
+                            <span class="file-stat-label">Downloads</span>
+                        </div>
+                        <div class="file-stat">
+                            <span class="file-stat-value">${formatDate(file.upload_date)}</span>
+                            <span class="file-stat-label">Uploaded</span>
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); createSingleDownload(${file.id})">
+                            <i class="fas fa-download"></i>
+                            Download
+                        </button>
+                        <button class="btn btn-sm" onclick="event.stopPropagation(); showFileDetail(${file.id})">
+                            <i class="fas fa-info"></i>
+                            Details
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            filesGrid.innerHTML = filesHtml;
+        }
+
+        function showEmptyState() {
+            document.getElementById('filesGrid').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-folder-open empty-icon"></i>
+                    <h3>No Files Found</h3>
+                    <p>This plugin folder is empty or doesn't exist.</p>
+                    <a href="/" class="btn btn-primary">Back to Dashboard</a>
+                </div>
+            `;
+        }
+
+        function filterFiles() {
+            const search = document.getElementById('fileSearch').value.toLowerCase();
+            filteredFiles = pluginFiles.filter(file => 
+                file.full_name.toLowerCase().includes(search) ||
+                file.version.toLowerCase().includes(search)
+            );
+            displayFiles();
+        }
+
+        function sortFiles() {
+            const sortBy = document.getElementById('sortSelect').value;
+            
+            filteredFiles.sort((a, b) => {
+                switch(sortBy) {
+                    case 'name':
+                        return a.full_name.localeCompare(b.full_name);
+                    case 'size':
+                        return b.file_size - a.file_size;
+                    case 'date':
+                        return new Date(b.upload_date) - new Date(a.upload_date);
+                    case 'downloads':
+                        return (b.download_count || 0) - (a.download_count || 0);
+                    default:
+                        return 0;
+                }
+            });
+            
+            displayFiles();
+        }
+
+        function showFileDetail(fileId) {
+            const file = pluginFiles.find(f => f.id === fileId);
+            if (!file) return;
+            
+            const modal = document.getElementById('fileDetailModal');
+            const title = document.getElementById('fileDetailTitle');
+            const body = document.getElementById('fileDetailBody');
+            const footer = document.getElementById('fileDetailFooter');
+            
+            title.textContent = file.full_name;
+            
+            body.innerHTML = `
+                <div class="file-detail-grid">
+                    <div class="file-detail-item">
+                        <label>File Name:</label>
+                        <span>${file.full_name}</span>
+                    </div>
+                    <div class="file-detail-item">
+                        <label>Plugin Name:</label>
+                        <span>${file.name}</span>
+                    </div>
+                    <div class="file-detail-item">
+                        <label>Version:</label>
+                        <span>${file.version}</span>
+                    </div>
+                    <div class="file-detail-item">
+                        <label>File Size:</label>
+                        <span>${formatSize(file.file_size)}</span>
+                    </div>
+                    <div class="file-detail-item">
+                        <label>Downloads:</label>
+                        <span>${file.download_count || 0}</span>
+                    </div>
+                    <div class="file-detail-item">
+                        <label>Upload Date:</label>
+                        <span>${formatDate(file.upload_date)}</span>
+                    </div>
+                    <div class="file-detail-item">
+                        <label>Uploaded By:</label>
+                        <span>${file.uploaded_by}</span>
+                    </div>
+                    <div class="file-detail-item">
+                        <label>File Path:</label>
+                        <span class="file-path">${file.file_path}</span>
+                    </div>
+                </div>
+            `;
+            
+            footer.innerHTML = `
+                <button class="btn" onclick="closeFileDetailModal()">Close</button>
+                <button class="btn btn-primary" onclick="createSingleDownload(${file.id}); closeFileDetailModal();">
+                    <i class="fas fa-download"></i>
+                    Create Download Link
+                </button>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeFileDetailModal() {
+            document.getElementById('fileDetailModal').style.display = 'none';
+        }
+
+        function showBulkDownloadModal() {
+            if (!currentUser.isAuthorized) {
+                showToast('You need permission to create download links', 'error');
+                return;
+            }
+            
+            const modal = document.getElementById('bulkDownloadModal');
+            const selector = document.getElementById('filesSelector');
+            
+            selector.innerHTML = pluginFiles.map(file => `
+                <div class="file-selector-item">
+                    <label class="file-selector-label">
+                        <input type="checkbox" value="${file.id}" checked>
+                        <span class="file-selector-info">
+                            <strong>${file.full_name}</strong>
+                            <small>${file.version} • ${formatSize(file.file_size)}</small>
+                        </span>
+                    </label>
+                </div>
+            `).join('');
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeBulkDownloadModal() {
+            document.getElementById('bulkDownloadModal').style.display = 'none';
+        }
+
+        async function createBulkDownload() {
+            const selectedFiles = Array.from(document.querySelectorAll('#filesSelector input[type="checkbox"]:checked'))
+                .map(cb => parseInt(cb.value));
+            
+            if (selectedFiles.length === 0) {
+                showToast('Please select at least one file', 'warning');
+                return;
+            }
+
+            const maxDownloads = document.getElementById('maxDownloads').value;
+            const expiresHours = document.getElementById('expiresHours').value;
+            const allowedIps = document.getElementById('allowedIps').value.trim();
+
+            try {
+                // For now, create individual download links for each file
+                // In a real implementation, you'd create a zip archive
+                const downloadLinks = [];
+                
+                for (const fileId of selectedFiles) {
+                    const response = await fetch('/api/download', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pluginId: fileId,
+                            maxDownloads: parseInt(maxDownloads),
+                            expiresHours: parseInt(expiresHours),
+                            allowedIps: allowedIps || null
+                        })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        downloadLinks.push(result);
+                    }
+                }
+
+                if (downloadLinks.length > 0) {
+                    showBulkDownloadResult(downloadLinks);
+                    closeBulkDownloadModal();
+                } else {
+                    showToast('Failed to create download links', 'error');
+                }
+            } catch (error) {
+                showToast('Error creating download links', 'error');
+            }
+        }
+
+        function showBulkDownloadResult(downloadLinks) {
+            const modal = document.getElementById('fileDetailModal');
+            const title = document.getElementById('fileDetailTitle');
+            const body = document.getElementById('fileDetailBody');
+            const footer = document.getElementById('fileDetailFooter');
+            
+            title.textContent = 'Bulk Download Links Created';
+            
+            body.innerHTML = `
+                <div class="bulk-download-result">
+                    <p class="success-message">
+                        <i class="fas fa-check-circle"></i>
+                        Successfully created ${downloadLinks.length} download links!
+                    </p>
+                    <div class="download-links-list">
+                        ${downloadLinks.map(link => `
+                            <div class="download-link-item">
+                                <div class="download-link-info">
+                                    <strong>${link.plugin.full_name}</strong>
+                                    <small>Expires: ${formatDate(link.expiresAt)}</small>
+                                </div>
+                                <div class="download-link-actions">
+                                    <button class="btn btn-sm" onclick="copyToClipboard('${link.downloadUrl}')">
+                                        <i class="fas fa-copy"></i>
+                                        Copy
+                                    </button>
+                                    <a href="${link.downloadUrl}" class="btn btn-sm btn-primary" target="_blank">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        Open
+                                    </a>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            footer.innerHTML = `
+                <button class="btn" onclick="closeFileDetailModal()">Close</button>
+                <button class="btn btn-primary" onclick="copyAllLinks()">
+                    <i class="fas fa-copy"></i>
+                    Copy All Links
+                </button>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        async function createSingleDownload(fileId) {
+            if (!currentUser.isAuthorized) {
+                showToast('You need permission to create download links', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pluginId: fileId,
+                        maxDownloads: 10,
+                        expiresHours: 24
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showSingleDownloadResult(result);
+                } else {
+                    const error = await response.json();
+                    showToast(error.error || 'Failed to create download link', 'error');
+                }
+            } catch (error) {
+                showToast('Error creating download link', 'error');
+            }
+        }
+
+        function showSingleDownloadResult(result) {
+            const modal = document.getElementById('fileDetailModal');
+            const title = document.getElementById('fileDetailTitle');
+            const body = document.getElementById('fileDetailBody');
+            const footer = document.getElementById('fileDetailFooter');
+            
+            title.textContent = 'Download Link Created';
+            
+            body.innerHTML = `
+                <div class="single-download-result">
+                    <p class="success-message">
+                        <i class="fas fa-check-circle"></i>
+                        Download link created successfully!
+                    </p>
+                    <div class="download-link-details">
+                        <div class="detail-item">
+                            <label>Plugin:</label>
+                            <span>${result.plugin.full_name}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Max Downloads:</label>
+                            <span>10 times</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Expires:</label>
+                            <span>${formatDate(result.expiresAt)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Download URL:</label>
+                            <div class="url-container">
+                                <input type="text" class="form-control" value="${result.downloadUrl}" readonly id="downloadUrl">
+                                <button class="btn btn-sm" onclick="copyToClipboard('${result.downloadUrl}')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            footer.innerHTML = `
+                <button class="btn" onclick="closeFileDetailModal()">Close</button>
+                <a href="${result.downloadUrl}" class="btn btn-primary" target="_blank">
+                    <i class="fas fa-external-link-alt"></i>
+                    Test Download
+                </a>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('Copied to clipboard!', 'success');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('Copied to clipboard!', 'success');
+            }
+        }
+
+        function copyAllLinks() {
+            const links = Array.from(document.querySelectorAll('.download-link-item'))
+                .map(item => item.querySelector('a').href)
+                .join('\n');
+            copyToClipboard(links);
+        }
+
+        async function refreshPluginData() {
+            showToast('Refreshing plugin data...', 'info');
+            await loadPluginData();
+            showToast('Plugin data refreshed!', 'success');
+        }
+
+        // Utility Functions
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function formatDate(date) {
+            if (typeof date === 'string') date = new Date(date);
+            return date.toLocaleDateString('vi-VN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}"></i>
+                ${message}
+            `;
+            
+            document.getElementById('toastContainer').appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+
+    <style>
+        .plugin-detail-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .plugin-detail-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .plugin-detail-info {
+            flex: 1;
+        }
+
+        .plugin-detail-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .plugin-detail-description {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .plugin-detail-badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .plugin-detail-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .plugin-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .files-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .file-card {
+            background: var(--darker);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .file-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .file-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--gradient-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            color: var(--text);
+            word-break: break-all;
+        }
+
+        .file-meta {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        .file-stats {
+            display: flex;
+            justify-content: space-between;
+            margin: 1rem 0;
+            padding: 0.75rem 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .file-stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .file-stat-value {
+            display: block;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.875rem;
+        }
+
+        .file-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .loading-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .files-selector {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+
+        .file-selector-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .file-selector-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .file-selector-label:hover {
+            background: var(--hover);
+        }
+
+        .file-selector-info {
+            flex: 1;
+        }
+
+        .file-selector-info strong {
+            display: block;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .file-selector-info small {
+            color: var(--text-muted);
+        }
+
+        .file-detail-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .file-detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .file-detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-detail-item label {
+            font-weight: 600;
+            color: var(--text-muted);
+            min-width: 120px;
+        }
+
+        .file-path {
+            font-family: monospace;
+            font-size: 0.875rem;
+            background: var(--darker);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+
+        .bulk-download-result,
+        .single-download-result {
+            text-align: center;
+        }
+
+        .success-message {
+            color: var(--success);
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .success-message i {
+            margin-right: 0.5rem;
+        }
+
+        .download-links-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .download-link-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: var(--darker);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .download-link-info strong {
+            display: block;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .download-link-info small {
+            color: var(--text-muted);
+        }
+
+        .download-link-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .download-link-details {
+            text-align: left;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .detail-item label {
+            font-weight: 600;
+            color: var(--text-muted);
+            min-width: 120px;
+        }
+
+        .url-container {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .url-container input {
+            flex: 1;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .plugin-detail-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .plugin-detail-actions {
+                justify-content: center;
+            }
+
+            .files-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .files-controls {
+                justify-content: center;
+            }
+
+            .files-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .file-stats {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .file-stat {
+                display: flex;
+                justify-content: space-between;
+                text-align: left;
+            }
+
+            .detail-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+            }
+
+            .url-container {
+                max-width: none;
+            }
+        }
+    </style>
+</body>
+</html>

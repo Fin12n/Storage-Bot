@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugin Storage Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/style-db.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="logo">
+                <i class="fas fa-cube"></i>
+                Plugin Storage
+            </div>
+            
+            <div class="nav-links">
+                <a href="#" onclick="showSection('dashboard')" class="nav-link active" data-section="dashboard">
+                    <i class="fas fa-chart-pie"></i>
+                    Dashboard
+                </a>
+                <a href="#" onclick="showSection('plugins')" class="nav-link" data-section="plugins">
+                    <i class="fas fa-cubes"></i>
+                    Plugins
+                </a>
+                <a href="#" onclick="showSection('upload')" class="nav-link" data-section="upload" id="uploadLink">
+                    <i class="fas fa-upload"></i>
+                    Upload
+                </a>
+                <a href="#" onclick="showSection('downloads')" class="nav-link" data-section="downloads" id="downloadsLink">
+                    <i class="fas fa-download"></i>
+                    Downloads
+                </a>
+                <a href="#" onclick="showSection('users')" class="nav-link" data-section="users" id="usersLink">
+                    <i class="fas fa-users"></i>
+                    Users
+                </a>
+            </div>
+            
+            <div class="user-info">
+                <img id="userAvatar" class="avatar" src="" alt="Avatar">
+                <span id="userName"></span>
+                <div class="dropdown">
+                    <button class="dropdown-btn">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="#" onclick="showProfile()">
+                            <i class="fas fa-user"></i>
+                            Profile
+                        </a>
+                        <a href="/auth/logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section active">
+            <div class="section-header">
+                <h1 class="section-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Dashboard Overview
+                </h1>
+                <button class="btn btn-primary" onclick="refreshAll()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh All
+                </button>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" id="statsGrid">
+                <!-- Stats will be loaded here -->
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-history"></i> Recent Activity</h3>
+                </div>
+                <div class="card-body" id="recentActivity">
+                    <!-- Activity will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Plugins Section -->
+        <div id="plugins-section" class="section">
+            <div class="section-header">
+                <h1 class="section-title">
+                    <i class="fas fa-cubes"></i>
+                    Plugin Management
+                </h1>
+                <div class="btn-group">
+                    <button class="btn" onclick="reloadPlugins()">
+                        <i class="fas fa-sync-alt"></i>
+                        Reload
+                    </button>
+                    <input type="text" placeholder="Search plugins..." class="search-input" id="pluginSearch" onkeyup="filterPlugins()">
+                </div>
+            </div>
+
+            <div class="plugins-grid" id="pluginsGrid">
+                <!-- Plugins will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="upload-section" class="section">
+            <div class="section-header">
+                <h1 class="section-title">
+                    <i class="fas fa-upload"></i>
+                    Upload Plugin
+                </h1>
+            </div>
+
+            <div class="upload-area">
+                <div class="upload-dropzone" id="dropzone" 
+                     ondragover="handleDragOver(event)" 
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event)">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <h3>Drag & Drop Plugin Files</h3>
+                    <p>Or click to select .jar files (Max 100MB each)</p>
+                    <input type="file" id="fileInput" accept=".jar" multiple hidden onchange="handleFileSelect(event)">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-folder-open"></i>
+                        Browse Files
+                    </button>
+                </div>
+            </div>
+
+            <div class="upload-queue" id="uploadQueue">
+                <!-- Upload queue will be shown here -->
+            </div>
+        </div>
+
+        <!-- Downloads Section -->
+        <div id="downloads-section" class="section">
+            <div class="section-header">
+                <h1 class="section-title">
+                    <i class="fas fa-download"></i>
+                    Download Links
+                </h1>
+                <button class="btn btn-primary" onclick="showCreateDownloadModal()">
+                    <i class="fas fa-plus"></i>
+                    Create Link
+                </button>
+            </div>
+
+            <div class="downloads-list" id="downloadsList">
+                <!-- Download links will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div id="users-section" class="section">
+            <div class="section-header">
+                <h1 class="section-title">
+                    <i class="fas fa-users"></i>
+                    User Management
+                </h1>
+                <button class="btn btn-primary" onclick="showAddUserModal()">
+                    <i class="fas fa-user-plus"></i>
+                    Add User
+                </button>
+            </div>
+
+            <div class="users-list" id="usersList">
+                <!-- Users will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modalOverlay" class="modal-overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTitle"></h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Modal content -->
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <!-- Modal buttons -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/dashboard.js"></script>
+    <script>
+        let currentUser = null;
+        let plugins = [];
+
+        // Initialize dashboard
+        window.addEventListener('load', async () => {
+            await checkAuth();
+        });
+
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/user');
+                if (response.ok) {
+                    currentUser = await response.json();
+                    initializeDashboard();
+                } else {
+                    window.location.href = '/auth';
+                }
+            } catch (error) {
+                window.location.href = '/auth';
+            }
+        }
+
+        function initializeDashboard() {
+            // Update user info
+            document.getElementById('userName').textContent = currentUser.username;
+            document.getElementById('userAvatar').src = currentUser.avatar;
+            
+            // Show/hide authorized sections
+            if (!currentUser.isAuthorized) {
+                document.getElementById('uploadLink').style.display = 'none';
+                document.getElementById('downloadsLink').style.display = 'none';
+                document.getElementById('usersLink').style.display = 'none';
+            }
+            
+            // Load initial data
+            loadStats();
+            loadPlugins();
+            loadRecentActivity();
+        }
+
+        // Section Management
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Show target section
+            document.getElementById(sectionName + '-section').classList.add('active');
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+            
+            // Load section-specific data
+            switch(sectionName) {
+                case 'downloads':
+                    loadDownloads();
+                    break;
+                case 'users':
+                    loadUsers();
+                    break;
+            }
+        }
+
+        // Stats Loading
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                const statsHtml = `
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-cubes"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">${stats.totalPlugins}</div>
+                            <div class="stat-label">Plugin Folders</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-file-archive"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">${stats.totalFiles}</div>
+                            <div class="stat-label">Total Files</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-hdd"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">${formatSize(stats.totalSize)}</div>
+                            <div class="stat-label">Storage Used</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">${stats.totalDownloads}</div>
+                            <div class="stat-label">Downloads</div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('statsGrid').innerHTML = statsHtml;
+            } catch (error) {
+                showToast('Error loading stats', 'error');
+            }
+        }
+
+        // Plugin Loading
+        async function loadPlugins() {
+            try {
+                const response = await fetch('/api/plugins');
+                plugins = await response.json();
+                displayPlugins(plugins);
+            } catch (error) {
+                showToast('Error loading plugins', 'error');
+            }
+        }
+
+        function displayPlugins(pluginList) {
+            const pluginsHtml = pluginList.map((plugin, index) => `
+                <div class="plugin-card" style="animation-delay: ${index * 0.1}s" onclick="viewPlugin('${plugin.folder_name}')">
+                    <div class="plugin-header">
+                        <div class="plugin-icon">${plugin.folder_name.charAt(0).toUpperCase()}</div>
+                        <div class="plugin-info">
+                            <h3>${plugin.folder_name}</h3>
+                            <p>${plugin.file_count} files • ${formatSize(plugin.total_size)}</p>
+                        </div>
+                    </div>
+                    <div class="plugin-stats">
+                        <div class="plugin-stat">
+                            <div class="plugin-stat-value">${plugin.file_count}</div>
+                            <div class="plugin-stat-label">Files</div>
+                        </div>
+                        <div class="plugin-stat">
+                            <div class="plugin-stat-value">${formatSize(plugin.total_size)}</div>
+                            <div class="plugin-stat-label">Size</div>
+                        </div>
+                        <div class="plugin-stat">
+                            <div class="plugin-stat-value">${formatDate(plugin.last_updated)}</div>
+                            <div class="plugin-stat-label">Updated</div>
+                        </div>
+                    </div>
+                    <div class="plugin-actions">
+                        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); createDownloadForPlugin('${plugin.folder_name}')">
+                            <i class="fas fa-download"></i>
+                            Download
+                        </button>
+                        <button class="btn btn-sm" onclick="event.stopPropagation(); viewPlugin('${plugin.folder_name}')">
+                            <i class="fas fa-eye"></i>
+                            View
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('pluginsGrid').innerHTML = pluginsHtml;
+        }
+
+        // Utility Functions
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('vi-VN');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}"></i>
+                ${message}
+            `;
+            
+            document.getElementById('toastContainer').appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Placeholder functions for features to be implemented
+        async function loadRecentActivity() {
+            document.getElementById('recentActivity').innerHTML = '<p>Recent activity will be shown here...</p>';
+        }
+
+        async function loadDownloads() {
+            document.getElementById('downloadsList').innerHTML = '<p>Download links will be shown here...</p>';
+        }
+
+        async function loadUsers() {
+            document.getElementById('usersList').innerHTML = '<p>User management will be shown here...</p>';
+        }
+
+        function filterPlugins() {
+            const search = document.getElementById('pluginSearch').value.toLowerCase();
+            const filtered = plugins.filter(plugin => 
+                plugin.folder_name.toLowerCase().includes(search)
+            );
+            displayPlugins(filtered);
+        }
+
+        async function reloadPlugins() {
+            showToast('Reloading plugins...', 'info');
+            await loadPlugins();
+            showToast('Plugins reloaded successfully!', 'success');
+        }
+
+        async function refreshAll() {
+            showToast('Refreshing all data...', 'info');
+            await Promise.all([loadStats(), loadPlugins(), loadRecentActivity()]);
+            showToast('All data refreshed!', 'success');
+        }
+
+        function viewPlugin(folderName) {
+            window.location.href = `/plugin/${folderName}`;
+        }
+
+        function createDownloadForPlugin(folderName) {
+            showToast('Download feature coming soon!', 'info');
+        }
+
+        function showProfile() {
+            showToast('Profile feature coming soon!', 'info');
+        }
+
+        // Upload functions (placeholder)
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            const files = Array.from(event.dataTransfer.files);
+            handleFiles(files);
+        }
+
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            const jarFiles = files.filter(file => file.name.toLowerCase().endsWith('.jar'));
+            if (jarFiles.length === 0) {
+                showToast('Please select .jar files only', 'error');
+                return;
+            }
+            
+            jarFiles.forEach(file => uploadFile(file));
+        }
+
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    showToast(`${file.name} uploaded successfully!`, 'success');
+                    await loadStats();
+                    await loadPlugins();
+                } else {
+                    const error = await response.json();
+                    showToast(error.error || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                showToast('Upload failed', 'error');
+            }
+        }
+
+        // Modal functions (placeholder)
+        function closeModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        function showCreateDownloadModal() {
+            showToast('Create download modal coming soon!', 'info');
+        }
+
+        function showAddUserModal() {
+            showToast('Add user modal coming soon!', 'info');
+        }
+    </script>
+</body>
+</html>

@@ -43,30 +43,17 @@ class PluginManager {
             
             stmt.run([name, version, file.originalname, folderName, filePath, file.size, uploadedBy], 
                 function(err) {
-                if (err) reject(err);
-                resolve({
-                    id: this.lastID,
-                    name,
-                    version,
-                    fullName: file.originalname,
-                    folderName,
-                    filePath,
-                    fileSize: file.size
+                    if (err) reject(err);
+                    resolve({
+                        id: this.lastID,
+                        name,
+                        version,
+                        fullName: file.originalname,
+                        folderName,
+                        filePath,
+                        fileSize: file.size
+                    });
                 });
-            });
-        });
-    }err) {
-                if (err) reject(err);
-                resolve({
-                    id: this.lastID,
-                    name,
-                    version,
-                    fullName: file.originalname,
-                    folderName,
-                    filePath,
-                    fileSize: file.size
-                });
-            });
         });
     }
 
